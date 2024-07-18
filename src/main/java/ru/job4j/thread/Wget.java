@@ -11,36 +11,42 @@ import java.net.URL;
 public class Wget implements Runnable {
     private final String url;
     private final int speed;
+    private final File file;
 
-    public Wget(String url, int speed) {
+    public Wget(String url, int speed, File file) {
         validatorURL(url);
         this.url = url;
         this.speed = speed;
+        this.file = file;
     }
 
     @Override
     public void run() {
         long startAt = System.currentTimeMillis();
-        File file = new File("tmp.xml");
         try (InputStream input = new URL(url).openStream();
              FileOutputStream output = new FileOutputStream(file)) {
             System.out.printf(
                     "Open connection: %d ms%n", System.currentTimeMillis() - startAt);
             byte[] dataBuffer = new byte[1024];
             int bytesRead;
+            int countByteRead = 0;
+            long startDownload = System.currentTimeMillis();
             while ((bytesRead = input.read(dataBuffer, 0, dataBuffer.length)) != -1) {
-                long downloadAt = System.nanoTime();
                 output.write(dataBuffer, 0, bytesRead);
-                long download = System.nanoTime() - downloadAt;
-                long sleep = (long) Math.floor((1024.0 / download * 1000000) / speed);
-                System.out.printf("Read 1024 bytes : %s nano.%n", download);
-                if (sleep > 1) {
-                    try {
-                        System.out.printf("Thread sleep on : %s ms%n", sleep);
-                        Thread.sleep(sleep);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+                countByteRead += bytesRead;
+                if (countByteRead >= speed) {
+                    long endDownload = System.currentTimeMillis() - startDownload;
+                    if (endDownload < 1000) {
+                        try {
+                            long sleep = 1000 - endDownload;
+                            System.out.printf("Thread sleep on : %s ms%n", sleep);
+                            Thread.sleep(sleep);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
                     }
+                    startDownload = System.currentTimeMillis();
+                    countByteRead = 0;
                 }
             }
         } catch (IOException e) {
@@ -59,12 +65,13 @@ public class Wget implements Runnable {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        if (args.length < 2) {
+        if (args.length < 3) {
             throw new IllegalArgumentException("Not enough arguments");
         }
         String url = args[0];
         int speed = Integer.parseInt(args[1]);
-        Thread wget = new Thread(new Wget(url, speed));
+        File file = new File(args[2]);
+        Thread wget = new Thread(new Wget(url, speed, file));
         wget.start();
         wget.join();
     }

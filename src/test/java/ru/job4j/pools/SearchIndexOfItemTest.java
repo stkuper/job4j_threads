@@ -7,10 +7,11 @@ import static org.assertj.core.api.Assertions.*;
 class SearchIndexOfItemTest {
     @Test
     void whenLineSearchIndexOfItem() {
-        Item[] items = {new Item(1), new Item(2), new Item(3)};
+        Item item = new Item(2);
+        Item[] items = {new Item(1), item, new Item(3)};
         SearchIndexOfItem searchIndexOfItem = new SearchIndexOfItem<>(
-                items, 0, items.length, new Item(2));
-        assertThat(searchIndexOfItem.lineSearchIndexOfItem()).isEqualTo(1);
+                items, 0, items.length, item);
+        assertThat(searchIndexOfItem.search(items, item)).isEqualTo(1);
     }
 
     @Test
@@ -19,10 +20,11 @@ class SearchIndexOfItemTest {
         for (int i = 0; i < items.length; i++) {
             items[i] = new Item(i);
         }
+        Item item = new Item(33);
         SearchIndexOfItem searchIndexOfItem = new SearchIndexOfItem(
-                items, 0, items.length, new Item(33)
+                items, 0, items.length, item
         );
-        assertThat(searchIndexOfItem.search(items, new Item(33))).isEqualTo(33);
+        assertThat(searchIndexOfItem.search(items, item)).isEqualTo(33);
     }
 
     @Test
@@ -31,9 +33,10 @@ class SearchIndexOfItemTest {
         for (int i = 0; i < items.length; i++) {
             items[i] = new Item(i);
         }
+        Item item = new Item(55);
         SearchIndexOfItem searchIndexOfItem = new SearchIndexOfItem(
-                items, 0, items.length, new Item(55)
+                items, 0, items.length, item
         );
-        assertThat(searchIndexOfItem.search(items, new Item(55))).isEqualTo(-1);
+        assertThat(searchIndexOfItem.search(items, item)).isEqualTo(-1);
     }
 }

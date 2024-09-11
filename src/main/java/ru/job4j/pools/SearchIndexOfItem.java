@@ -26,21 +26,22 @@ public class SearchIndexOfItem<T> extends RecursiveTask<Integer> {
         SearchIndexOfItem rightSearch = new SearchIndexOfItem(array, middle + 1, toIndex, item);
         leftSearch.fork();
         rightSearch.fork();
-        return Math.min((int) leftSearch.join(), (int) rightSearch.join());
+        return Math.max((int) leftSearch.join(), (int) rightSearch.join());
     }
 
     protected Integer lineSearchIndexOfItem() {
         int result = -1;
-        for (int i = 0; i < array.length; i++) {
+        for (int i = fromIndex; i < toIndex; i++) {
             if (item.equals(array[i])) {
                 result = i;
+                break;
             }
         }
         return result;
     }
 
-    public Integer search(T[] array, T item) {
+    public static <T> Integer search(T[] array, T item) {
         ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
-        return forkJoinPool.invoke(new SearchIndexOfItem<T>(array, fromIndex, toIndex, item));
+        return forkJoinPool.invoke(new SearchIndexOfItem<T>(array, 0, array.length, item));
     }
 }
